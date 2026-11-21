@@ -11,8 +11,19 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
+const frontendOrigins = (process.env.FRONTEND_URL || `http://localhost:${port}`)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "*", credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, !origin || frontendOrigins.includes(origin));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json({ limit: "12mb" }));
 app.use(express.static(__dirname));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -28,7 +39,7 @@ app.use((req, res) => {
   res.status(404).json({ success: false, error: "Endpoint not found" });
 });
 
-app.use((error, req, res) => {
+app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     return res.status(400).json({ success: false, error: error.message });
   }

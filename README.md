@@ -148,16 +148,29 @@ Set a real `JWT_SECRET` in `.env`. Never commit `.env`.
 
 ## Start
 
+Start the backend in one PowerShell terminal:
+
 ```powershell
 npm start
 ```
 
-The API runs at `http://localhost:3000` by default.
+The API runs at `http://localhost:3000` by default and also serves the frontend.
+To run the static frontend separately, start a second terminal in the project
+root and run:
+
+```powershell
+python -m http.server 5500
+```
+
+Open `http://localhost:5500`. The backend's `FRONTEND_URL` must include that
+origin; it accepts a comma-separated list of exact origins.
 
 ## Demo credentials
 
-- Municipal officer: `officer` / `officer123`
-- Citizen: register through `POST /api/auth/register`
+- Citizen: `citizen@civiclens.org` (password configured by
+  `DEMO_CITIZEN_PASSWORD`)
+- Municipal officer: `officer@civiclens.gov` (password configured by
+  `DEMO_OFFICER_PASSWORD`)
 
 Demo values can be changed with `DEMO_OFFICER_USERNAME` and
 `DEMO_OFFICER_PASSWORD`.
@@ -262,17 +275,17 @@ not discarded.
 
 ## Frontend integration
 
-The frontend should use `http://localhost:3000/api` as its API base in local
-development. Register/login, store the returned token in memory or an agreed
-frontend store, and send it on all authenticated requests.
+The frontend uses `http://localhost:3000/api` as its API base in local
+development. Register/login, store the returned token, and send it on all
+authenticated requests.
 
 Existing frontend localStorage data can remain for UI state, but complaint
 creation, reading and status updates should call these REST endpoints rather
 than treating localStorage as authoritative. Use the `imageUrl` from submission
 responses and resolve it as `http://localhost:3000${imageUrl}`.
 
-Set `FRONTEND_URL` to the frontend origin, for example
-`http://localhost:5173`.
+Set `FRONTEND_URL` to the frontend origin or a comma-separated list of
+development origins, for example `http://localhost:5500,http://localhost:5173`.
 
 ## Testing
 
