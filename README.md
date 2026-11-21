@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # CivicLens 🏙️🔍
 > **AI-Powered Citizen Complaint Triage and Municipal Issue Prioritization**
 
@@ -126,3 +127,156 @@ const API_CONFIG = {
 };
 ```
 No HTML or frontend layout code needs to be modified when connecting the backend.
+=======
+# CivicLens
+
+CivicLens is an AI-assisted citizen complaint triage prototype. This repository
+uses Node.js, Express and JSON-file persistence. The existing frontend/Python
+scaffold is not redesigned or replaced.
+
+This is a **hackathon prototype**, not production-ready authentication or
+security.
+
+## Installation
+
+```powershell
+npm install
+copy .env.example .env
+```
+
+Set a real `JWT_SECRET` in `.env`. Never commit `.env`.
+
+## Start
+
+```powershell
+npm start
+```
+
+The API runs at `http://localhost:3000` by default.
+
+## Demo credentials
+
+- Municipal officer: `officer` / `officer123`
+- Citizen: register through `POST /api/auth/register`
+
+Demo values can be changed with `DEMO_OFFICER_USERNAME` and
+`DEMO_OFFICER_PASSWORD`.
+
+## Environment variables
+
+- `PORT`: API port
+- `FRONTEND_URL`: allowed browser origin
+- `JWT_SECRET`: demo token signing secret
+- `DEMO_OFFICER_USERNAME`: officer login username
+- `DEMO_OFFICER_PASSWORD`: officer login password
+- `AI_API_KEY`: OpenAI-compatible API key
+- `AI_API_URL`: chat-completions endpoint
+- `AI_MODEL`: model name
+
+Leave `AI_API_KEY` empty for the clearly labelled fallback keyword classifier.
+If a configured generative API fails or returns an invalid response, the API
+uses the fallback and records `analysisMethod: "Fallback keyword classifier"`.
+It does not falsely represent this fallback as generative AI.
+
+## Authentication
+
+Send successful login/register tokens as:
+
+```text
+Authorization: Bearer <token>
+```
+
+Citizens may only submit complaints and view their own records. Municipal
+officers may view all complaints, dashboard statistics, update status, assign
+departments and delete records. Demo deletion is intentionally limited to
+officers.
+
+## API endpoints
+
+### Health
+
+- `GET /api/health`
+
+### Authentication
+
+- `POST /api/auth/register`
+  - JSON: `{ "name": "Asha", "username": "asha", "password": "secret123" }`
+- `POST /api/auth/login`
+  - JSON: `{ "username": "officer", "password": "officer123" }`
+  - Citizen JSON uses the citizen's registered credentials.
+
+### Complaints
+
+- `POST /api/complaints`
+  - Citizen role required.
+  - JSON: `{ "text": "...", "location": "...", "image": "optional URL" }`
+  - Or `multipart/form-data` fields `text`, `location` and optional `image`.
+- `GET /api/complaints`
+  - Citizen: own complaints only.
+  - Officer: all complaints.
+  - Officer results are sorted Critical to Low, then by priority score.
+- `GET /api/complaints/:id`
+- `PATCH /api/complaints/:id/status`
+  - Officer only.
+  - `{ "status": "Pending" | "In Progress" | "Resolved" }`
+- `PATCH /api/complaints/:id/reopen`
+  - Officer only; resolved complaints reopen as `In Progress`.
+- `PATCH /api/complaints/:id/department`
+  - Officer only.
+  - `{ "department": "Public Works Department" }`
+- `DELETE /api/complaints/:id`
+  - Officer only; reserved for authorised demo-administrator deletion.
+
+All mutation/list responses use:
+
+```json
+{ "success": true, "data": {} }
+```
+
+Errors use:
+
+```json
+{ "success": false, "error": "Human-readable message" }
+```
+
+### Dashboard
+
+- `GET /api/dashboard/stats` (municipal officer only)
+
+The response includes total ingested complaints, active, Critical, High,
+Pending, resolved, average AI priority score and resolution rate.
+
+## Image handling
+
+Upload the `image` field with `multipart/form-data`. JPG, PNG and WebP are
+accepted; the limit is 5 MB. Files are stored only in `uploads/` and served at
+`/uploads/<filename>`. Uploading JSON `image` is also accepted as an explicit
+URL but is not treated as a server-hosted upload.
+
+## Duplicate detection
+
+Before saving, complaints are compared with active records in the same location
+and category using basic text similarity. A match is linked through
+`possibleDuplicateOf` and exposed as `possibleDuplicate: true`; complaints are
+not discarded.
+
+## Frontend integration
+
+The frontend should use `http://localhost:3000/api` as its API base in local
+development. Register/login, store the returned token in memory or an agreed
+frontend store, and send it on all authenticated requests.
+
+Existing frontend localStorage data can remain for UI state, but complaint
+creation, reading and status updates should call these REST endpoints rather
+than treating localStorage as authoritative. Use the `imageUrl` from submission
+responses and resolve it as `http://localhost:3000${imageUrl}`.
+
+Set `FRONTEND_URL` to the frontend origin, for example
+`http://localhost:5173`.
+
+## Testing
+
+```powershell
+npm test
+```
+>>>>>>> Stashed changes
