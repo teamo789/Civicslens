@@ -9,5 +9,6 @@
   "search.exclude": {
     "**/node_modules": true,
     "**/venv": true
-  }
+  },
+  "liveServer.settings.port": 5501
 }
