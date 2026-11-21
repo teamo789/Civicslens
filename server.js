@@ -16,14 +16,28 @@ const frontendOrigins = (process.env.FRONTEND_URL || `http://localhost:${port}`)
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+a
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173"
+];
+
 app.use(cors({
   origin: (origin, callback) => {
-    callback(null, !origin || frontendOrigins.includes(origin));
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("CORS blocked: " + origin));
   },
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(express.json({ limit: "12mb" }));
 app.use(express.static(__dirname));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
