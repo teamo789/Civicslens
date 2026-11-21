@@ -46,6 +46,14 @@
         <div id="navOfficerControls" class="hidden" style="display: flex; align-items: center; gap: 0.65rem;">
           <div class="auth-user-display" style="font-size: 0.82rem; color: var(--text-secondary);"></div>
 
+          <button class="icon-action notification-action" type="button" title="Notifications" aria-label="Notifications">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notification-dot"></span>
+          </button>
+
           <button class="btn btn-secondary btn-sm btn-reset-demo-action" title="Restore Original Seed Complaints">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
@@ -240,6 +248,40 @@
        VIEW 2: Municipal Officer Dashboard (Shown when logged in as Officer)
        ======================================================================== -->
   <main id="officerDashboardSection" class="main-content hidden">
+
+    <aside class="command-sidebar" id="commandSidebar">
+      <button class="sidebar-collapse" id="sidebarCollapseBtn" type="button" aria-label="Collapse sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <nav class="sidebar-nav" aria-label="Officer navigation">
+        <button class="sidebar-link active" type="button" data-action="overview">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Overview</span>
+        </button>
+        <button class="sidebar-link" type="button" data-action="active">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Active Complaints</span>
+        </button>
+        <button class="sidebar-link" type="button" data-action="resolved">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Resolved Cases</span>
+        </button>
+        <button class="sidebar-link" type="button" data-action="triage">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>AI Triage Centre</span>
+        </button>
+        <button class="sidebar-link" type="button" data-action="analytics">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Analytics</span>
+        </button>
+        <button class="sidebar-link" type="button" data-action="departments">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>
+          <span>Departments</span>
+        </button>
+      </nav>
+    </aside>
 
     <!-- Dashboard Header -->
     <section class="dashboard-header">

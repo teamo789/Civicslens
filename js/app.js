@@ -138,6 +138,7 @@ class CivicApplication {
       this.setupToasts();
       this.updateAIStatusBadge();
       this.setupResetButton();
+      this.setupCommandSidebar();
       this.handlePageAuth();
     });
   }
@@ -224,6 +225,39 @@ class CivicApplication {
     setTimeout(() => {
       if (toast.parentElement) toast.parentElement.removeChild(toast);
     }, 280);
+  }
+
+  setupCommandSidebar() {
+    const collapseBtn = document.getElementById("sidebarCollapseBtn");
+    if (collapseBtn) {
+      collapseBtn.addEventListener("click", () => {
+        document.body.classList.toggle("sidebar-collapsed");
+      });
+    }
+
+    document.querySelectorAll(".sidebar-link").forEach(link => {
+      link.addEventListener("click", () => {
+        document.querySelectorAll(".sidebar-link").forEach(item => item.classList.remove("active"));
+        link.classList.add("active");
+        const action = link.dataset.action;
+        if (action === "active" && document.getElementById("tabQueueActive")) {
+          document.getElementById("tabQueueActive").click();
+          document.querySelector(".queue-tabs-container").scrollIntoView({ behavior: "smooth" });
+        } else if (action === "resolved" && document.getElementById("tabQueueResolved")) {
+          document.getElementById("tabQueueResolved").click();
+          document.querySelector(".queue-tabs-container").scrollIntoView({ behavior: "smooth" });
+        } else if (action === "triage") {
+          document.getElementById("dashboardSearchInput")?.focus();
+        } else if (action === "analytics") {
+          document.querySelector(".stats-grid")?.scrollIntoView({ behavior: "smooth" });
+          this.showToast("Live analytics", "Dashboard totals are calculated from the current complaint dataset.", "info");
+        } else if (action === "departments") {
+          document.getElementById("complaintsGrid")?.scrollIntoView({ behavior: "smooth" });
+        } else {
+          document.querySelector(".dashboard-header")?.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    });
   }
 
   setupResetButton() {
