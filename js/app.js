@@ -55,9 +55,31 @@ class CivicAuthManager {
    * Log in a user by role and credentials.
    * Supports demo credentials or any test email/password provided for hackathon testing.
    */
-  login(email, password, role) {
+  async login(email, password, role) {
     const cleanEmail = (email || "").trim().toLowerCase();
     const cleanRole = role || "citizen";
+    if (window.API_CONFIG && window.API_CONFIG.USE_BACKEND) {
+      try {
+        const backendUser = await window.CivicAPI.login(cleanEmail, password);
+        const normalizedRole = backendUser.role === "MUNICIPAL_OFFICER" ? "officer" : "citizen";
+        if (normalizedRole !== cleanRole) throw new Error("Credentials do not match the selected role");
+        const userData = {
+          email: backendUser.username,
+          name: backendUser.name,
+          role: normalizedRole,
+          badge: normalizedRole === "officer" ? "MUNI-8042" : undefined,
+          department: normalizedRole === "officer" ? "Central Municipal Dispatch" : undefined,
+          phone: DEMO_CREDENTIALS.citizen.phone,
+          ward: DEMO_CREDENTIALS.citizen.ward,
+          loggedInAt: new Date().toISOString()
+        };
+        this.currentUser = userData;
+        localStorage.setItem(CIVIC_AUTH_KEY, JSON.stringify(userData));
+        return userData;
+      } catch (error) {
+        throw error;
+      }
+    }
 
     let userData = null;
     if (cleanRole === "officer") {
@@ -99,6 +121,7 @@ class CivicAuthManager {
   logout() {
     this.currentUser = null;
     localStorage.removeItem(CIVIC_AUTH_KEY);
+    if (window.CivicAPI) window.CivicAPI.logout();
     window.location.href = "index.html";
   }
 }
@@ -351,10 +374,19 @@ class CivicApplication {
 
     // 1-Click Demo Login Buttons
     document.querySelectorAll(".btn-demo-quick-login").forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async (e) => {
         e.preventDefault();
         const role = btn.getAttribute("data-role") || "citizen";
-        this.auth.demoLogin(role);
+        try {
+          await this.auth.login(
+            role === "officer" ? DEMO_CREDENTIALS.officer.email : DEMO_CREDENTIALS.citizen.email,
+            role === "officer" ? DEMO_CREDENTIALS.officer.password : DEMO_CREDENTIALS.citizen.password,
+            role
+          );
+        } catch (error) {
+          this.showToast("Login Failed", error.message, "error");
+          return;
+        }
         
         if (role === "officer") {
           this.showToast("Officer Login Successful", `Welcome, ${DEMO_CREDENTIALS.officer.name} (${DEMO_CREDENTIALS.officer.badge}).`, "success");
@@ -372,12 +404,17 @@ class CivicApplication {
 
     // Form submit
     if (loginForm) {
-      loginForm.addEventListener("submit", (e) => {
+      loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = emailInput ? emailInput.value.trim() : "";
         const password = passwordInput ? passwordInput.value.trim() : "";
-        
-        const user = this.auth.login(email, password, selectedRole);
+        let user;
+        try {
+          user = await this.auth.login(email, password, selectedRole);
+        } catch (error) {
+          this.showToast("Login Failed", error.message, "error");
+          return;
+        }
         
         if (selectedRole === "officer") {
           this.showToast("Officer Authorized", `Welcome, ${user.name}.`, "success");

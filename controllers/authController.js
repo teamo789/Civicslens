@@ -42,7 +42,7 @@ async function login(req, res) {
   const users = getUsers();
   let user = users.find((item) => item.username.toLowerCase() === String(username).toLowerCase());
 
-  const officerUsername = process.env.DEMO_OFFICER_USERNAME || "officer";
+  const officerUsername = process.env.DEMO_OFFICER_USERNAME || "officer@civiclens.gov";
   const officerPassword = process.env.DEMO_OFFICER_PASSWORD || "officer123";
   if (String(username).toLowerCase() === officerUsername.toLowerCase()) {
     if (password !== officerPassword) {
@@ -54,11 +54,25 @@ async function login(req, res) {
       username: officerUsername,
       role: "MUNICIPAL_OFFICER",
     };
-  } else if (!user) {
+  } else {
+    const citizenUsername = process.env.DEMO_CITIZEN_USERNAME || "citizen@civiclens.org";
+    const citizenPassword = process.env.DEMO_CITIZEN_PASSWORD || "citizen123";
+    if (String(username).toLowerCase() === citizenUsername.toLowerCase()) {
+      if (password !== citizenPassword) {
+        return res.status(401).json({ success: false, error: "Invalid credentials" });
+      }
+      user = {
+        id: "demo-citizen",
+        name: "Alex Rivera",
+        username: citizenUsername,
+        role: "CITIZEN",
+      };
+    }
+  }
+  if (!user) {
     return res.status(401).json({ success: false, error: "Invalid credentials" });
   }
-
-  if (user.role === "CITIZEN" && !(await bcrypt.compare(password, user.passwordHash))) {
+  if (user.role === "CITIZEN" && user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ success: false, error: "Invalid credentials" });
   }
   res.json({

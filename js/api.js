@@ -9,9 +9,8 @@
  */
 
 const API_CONFIG = {
-  // Toggle this to true when Member 2's backend server is running!
-  USE_BACKEND: false,
-  BASE_URL: "http://localhost:5000/api", // Member 2 endpoint target
+  USE_BACKEND: true,
+  BASE_URL: "http://localhost:3000/api",
   STORAGE_KEY: "civiclens_complaints_db_v1",
   TIMEOUT_MS: 5000
 };
@@ -19,6 +18,35 @@ const API_CONFIG = {
 class CivicAPIService {
   constructor() {
     this.initStorage();
+  }
+
+  getToken() {
+    return localStorage.getItem("civiclens_api_token");
+  }
+
+  authHeaders(includeJson = true) {
+    const headers = {};
+    if (includeJson) headers["Content-Type"] = "application/json";
+    const token = this.getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }
+
+  async login(username, password) {
+    const res = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+      signal: AbortSignal.timeout(API_CONFIG.TIMEOUT_MS),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.error || "Login failed");
+    localStorage.setItem("civiclens_api_token", payload.data.token);
+    return payload.data.user;
+  }
+
+  logout() {
+    localStorage.removeItem("civiclens_api_token");
   }
 
   /**
@@ -58,10 +86,12 @@ class CivicAPIService {
       try {
         const queryParams = new URLSearchParams(filters).toString();
         const res = await fetch(`${API_CONFIG.BASE_URL}/complaints?${queryParams}`, {
+          headers: this.authHeaders(false),
           signal: AbortSignal.timeout(API_CONFIG.TIMEOUT_MS)
         });
         if (!res.ok) throw new Error(`Backend returned status ${res.status}`);
-        return await res.json();
+        const payload = await res.json();
+        return payload.data;
       } catch (err) {
         console.warn("[CivicAPI] Backend unreachable, falling back to local store:", err);
       }
@@ -123,12 +153,13 @@ class CivicAPIService {
       try {
         const res = await fetch(`${API_CONFIG.BASE_URL}/complaints`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: this.authHeaders(true),
           body: JSON.stringify(data),
           signal: AbortSignal.timeout(API_CONFIG.TIMEOUT_MS)
         });
         if (!res.ok) throw new Error(`Backend returned status ${res.status}`);
-        return await res.json();
+        const payload = await res.json();
+        return payload.data;
       } catch (err) {
         console.warn("[CivicAPI] Backend submission failed, saving locally:", err);
       }
@@ -178,12 +209,13 @@ class CivicAPIService {
       try {
         const res = await fetch(`${API_CONFIG.BASE_URL}/complaints/${id}/status`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: this.authHeaders(true),
           body: JSON.stringify({ status: newStatus }),
           signal: AbortSignal.timeout(API_CONFIG.TIMEOUT_MS)
         });
         if (!res.ok) throw new Error(`Failed to update status on backend`);
-        return await res.json();
+        const payload = await res.json();
+        return payload.data;
       } catch (err) {
         console.warn("[CivicAPI] Backend update failed, updating locally:", err);
       }
@@ -210,6 +242,20 @@ class CivicAPIService {
    * Reopen a resolved complaint back into the active queue.
    */
   async reopenComplaint(id) {
+    if (API_CONFIG.USE_BACKEND) {
+      try {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/complaints/${id}/reopen`, {
+          method: "PATCH",
+          headers: this.authHeaders(true),
+          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT_MS)
+        });
+        if (!res.ok) throw new Error("Failed to reopen complaint on backend");
+        const payload = await res.json();
+        return payload.data;
+      } catch (err) {
+        console.warn("[CivicAPI] Backend reopen failed, updating locally:", err);
+      }
+    }
     return await this.updateStatus(id, "in_progress");
   }
 
