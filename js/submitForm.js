@@ -1,7 +1,7 @@
 /**
  * CivicLens - Citizen Complaint Submission & Status Tracking
  * Member 1: Frontend Architecture & UI
- * Handles form validation, photo drag-and-drop & preview, GPS Geolocation, and citizen ticket tracking.
+ * Handles step-by-step form validation, photo drag-and-drop & preview, GPS Geolocation, and citizen ticket tracking.
  */
 
 class ComplaintFormHandler {
@@ -194,12 +194,12 @@ class ComplaintFormHandler {
           }
 
           if (this.locationPill && this.locationPillText) {
-            this.locationPillText.textContent = `GPS Locked: ${this.currentCoords.lat}, ${this.currentCoords.lng} (±${Math.round(pos.coords.accuracy)}m)`;
+            this.locationPillText.textContent = `GPS: ${this.currentCoords.lat}, ${this.currentCoords.lng} (±${Math.round(pos.coords.accuracy)}m)`;
             this.locationPill.classList.remove("hidden");
           }
 
           this.resetLocateBtn(true);
-          window.CivicApp.showToast("GPS Coordinate Acquired", "Location pinpointed successfully.", "success");
+          window.CivicApp.showToast("Location Captured", "GPS coordinates pinpointed successfully.", "success");
         },
         (err) => {
           console.warn("[GPS] Geolocation error:", err.message);
@@ -208,11 +208,11 @@ class ComplaintFormHandler {
             this.locationInput.value = "Central Municipal District, Ward 4";
           }
           if (this.locationPill && this.locationPillText) {
-            this.locationPillText.textContent = `GPS Simulation: 37.7749, -122.4194`;
+            this.locationPillText.textContent = `GPS: 37.7749, -122.4194`;
             this.locationPill.classList.remove("hidden");
           }
           this.resetLocateBtn(false);
-          window.CivicApp.showToast("GPS Simulated", "Applied civic center coordinates for demonstration.", "info");
+          window.CivicApp.showToast("Location Set", "Applied civic center reference for demonstration.", "info");
         },
         { enableHighAccuracy: true, timeout: 6000 }
       );
@@ -229,7 +229,7 @@ class ComplaintFormHandler {
         <line x1="12" y1="6" x2="12" y2="2"/>
         <line x1="12" y1="22" x2="12" y2="18"/>
       </svg>
-      ${success ? "GPS Captured" : "Locate Me"}
+      ${success ? "Location Found" : "Use My Location"}
     `;
   }
 
@@ -264,11 +264,11 @@ class ComplaintFormHandler {
         }
 
         if (this.locationPill && this.locationPillText) {
-          this.locationPillText.textContent = `Coordinates: ${this.currentCoords.lat}, ${this.currentCoords.lng}`;
+          this.locationPillText.textContent = `GPS: ${this.currentCoords.lat}, ${this.currentCoords.lng}`;
           this.locationPill.classList.remove("hidden");
         }
 
-        window.CivicApp.showToast("Demo Preset Loaded", `Form populated with realistic ${type} data.`, "info");
+        window.CivicApp.showToast("Example Loaded", `Loaded sample ${type} details for fast testing.`, "info");
       });
     });
   }
@@ -308,7 +308,7 @@ class ComplaintFormHandler {
     const isAnonymous = anonCheckbox ? anonCheckbox.checked : false;
 
     if (!title || !category || !description || !location) {
-      window.CivicApp.showToast("Incomplete Form", "Please fill in all required fields marked with *.", "warning");
+      window.CivicApp.showToast("Required Fields Missing", "Please provide a title, category, location, and description.", "warning");
       return;
     }
 
@@ -320,7 +320,7 @@ class ComplaintFormHandler {
         <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
         <path d="M12 2 A 10 10 0 0 1 22 12" stroke-width="3"/>
       </svg>
-      AI Triaging Issue...
+      Submitting Complaint...
     `;
 
     try {
@@ -349,7 +349,7 @@ class ComplaintFormHandler {
       // Show high-impact success alert with Ticket ID
       window.CivicApp.showToast(
         `Ticket Created: ${result.id}`,
-        `Complaint triaged with AI Priority ${result.aiTriage.score}/100 (${result.severity.toUpperCase()}). Assigned to: ${result.aiTriage.department}.`,
+        `Complaint logged successfully. Assigned to: ${result.aiTriage.department}.`,
         "success",
         6000
       );
@@ -361,7 +361,7 @@ class ComplaintFormHandler {
         const ticketIdEl = document.getElementById("newTicketIdDisplay");
         const deptEl = document.getElementById("newTicketDeptDisplay");
         if (ticketIdEl) ticketIdEl.textContent = result.id;
-        if (deptEl) deptEl.textContent = `${result.aiTriage.department} (${result.severity.toUpperCase()} Priority)`;
+        if (deptEl) deptEl.textContent = `Assigned to: ${result.aiTriage.department}`;
         confirmBanner.scrollIntoView({ behavior: "smooth" });
       }
 
@@ -404,7 +404,7 @@ window.initCitizenTracker = function() {
       let allComplaints = await window.CivicAPI.getComplaints({});
       
       if (totalCountBadge) {
-        totalCountBadge.textContent = `${allComplaints.length} Tickets`;
+        totalCountBadge.textContent = `${allComplaints.length} Total Reports`;
       }
 
       // Apply filtering
@@ -415,9 +415,9 @@ window.initCitizenTracker = function() {
       if (q) {
         list = list.filter(c => 
           c.id.toLowerCase().includes(q) ||
-          c.title.toLowerCase().includes(q) ||
-          c.description.toLowerCase().includes(q) ||
-          c.location.toLowerCase().includes(q)
+          (c.title && c.title.toLowerCase().includes(q)) ||
+          (c.description && c.description.toLowerCase().includes(q)) ||
+          (c.location && c.location.toLowerCase().includes(q))
         );
       }
 
@@ -430,8 +430,8 @@ window.initCitizenTracker = function() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </div>
-            <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:0.25rem;">No Tickets Found</h4>
-            <p style="font-size:0.84rem; color:var(--text-muted);">No complaints match your search query or filter.</p>
+            <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:0.25rem;">No Complaints Found</h4>
+            <p style="font-size:0.84rem; color:var(--text-muted);">Try adjusting your search query or status filter.</p>
           </div>
         `;
         return;
@@ -439,8 +439,14 @@ window.initCitizenTracker = function() {
 
       trackerContainer.innerHTML = list.map(item => {
         const timeAgo = formatTimeAgo(item.createdAt);
-        const score = item.aiTriage ? item.aiTriage.score : 50;
-        const dept = item.aiTriage ? item.aiTriage.department : "Public Works";
+        const dept = item.aiTriage && item.aiTriage.department ? item.aiTriage.department : "Public Works";
+        const st = (item.status || "submitted").toLowerCase();
+
+        // Citizen friendly stage mapping
+        const isReceived = true;
+        const isTriaged = st === "triaged" || st === "in_progress" || st === "resolved";
+        const isInProgress = st === "in_progress" || st === "resolved";
+        const isResolved = st === "resolved";
 
         return `
           <div class="citizen-ticket-card priority-${item.severity}">
@@ -451,7 +457,7 @@ window.initCitizenTracker = function() {
             <div class="citizen-ticket-info">
               <div class="citizen-ticket-header">
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                  <span class="complaint-id" title="Your Official Municipal Ticket ID">${item.id}</span>
+                  <span class="complaint-id" title="Your Official Ticket ID">${item.id}</span>
                   <span class="badge badge-category">${item.category}</span>
                   ${renderSeverityBadge(item.severity)}
                 </div>
@@ -461,15 +467,27 @@ window.initCitizenTracker = function() {
               <h4 class="citizen-ticket-title">${escapeHtml(item.title)}</h4>
               <p class="citizen-ticket-desc">${escapeHtml(item.description)}</p>
 
+              <!-- Plain English Progression Pipeline -->
+              <div class="citizen-progress-pipeline">
+                <span class="pipeline-step ${isReceived ? 'completed' : ''}">✓ Received</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step ${isTriaged ? 'completed' : (st === 'submitted' ? 'active' : '')}">🔍 Under Review</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step ${st === 'in_progress' ? 'active' : (isResolved ? 'completed' : '')}">👷 In Progress</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step ${isResolved ? 'completed' : ''}">✅ Resolved</span>
+              </div>
+
               <div class="citizen-ticket-footer">
                 <div class="citizen-ticket-meta">
                   <span>📍 ${escapeHtml(item.location)}</span>
                   <span>⏱️ ${timeAgo}</span>
                   <span>🏢 ${escapeHtml(dept)}</span>
                 </div>
-                <div class="citizen-ticket-score">
-                  <span>AI Urgency: <strong>${score}/100</strong></span>
-                </div>
+                <button type="button" class="btn-copy-ticket" onclick="navigator.clipboard.writeText('${item.id}'); window.CivicApp.showToast('Copied', 'Ticket ID ${item.id} copied to clipboard.', 'info');">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Ticket ID
+                </button>
               </div>
             </div>
           </div>
@@ -477,7 +495,7 @@ window.initCitizenTracker = function() {
       }).join("");
     } catch (err) {
       console.error("[CitizenTracker] Error rendering tickets:", err);
-      trackerContainer.innerHTML = `<p style="color:#ef4444; padding:1rem;">Failed to load complaints.</p>`;
+      trackerContainer.innerHTML = `<p style="color:var(--sev-critical-text); padding:1rem;">Failed to load complaints.</p>`;
     }
   }
 
@@ -497,7 +515,11 @@ window.initCitizenTracker = function() {
 
   function renderStatusBadge(st) {
     const s = (st || "submitted").toLowerCase();
-    return `<span class="badge badge-status-${s}">${s.replace('_', ' ')}</span>`;
+    let label = "Complaint Received";
+    if (s === "triaged") label = "Under Review";
+    else if (s === "in_progress") label = "In Progress";
+    else if (s === "resolved") label = "Resolved";
+    return `<span class="badge badge-status-${s}">${label}</span>`;
   }
 
   function escapeHtml(str) {
