@@ -50,7 +50,7 @@
       }
       user = {
         id: "demo-municipal-officer",
-        name: "Municipal Officer",
+        name: "Officer Sarah Chen",
         username: officerUsername,
         role: "MUNICIPAL_OFFICER",
       };

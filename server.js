@@ -11,31 +11,29 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const frontendOrigins = (process.env.FRONTEND_URL || `http://localhost:${port}`)
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-a
-const allowedOrigins = [
+const defaultOrigins = [
+  "http://localhost:55270",
+  "http://127.0.0.1:55270",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:5500",
   "http://127.0.0.1:5500",
   "http://localhost:5173",
-  "http://127.0.0.1:5173"
+  "http://127.0.0.1:5173",
 ];
+const envOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error("CORS blocked: " + origin));
+    callback(null, !origin || allowedOrigins.includes(origin));
   },
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use(express.json({ limit: "12mb" }));

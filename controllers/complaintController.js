@@ -51,7 +51,7 @@ function categoryLabel(category) {
 }
 
 function frontendComplaint(record) {
-  const severity = String(record.severity || "Low").toLower();
+  const severity = String(record.severity || "Low").toLowerCase();
   const statusMap = { Pending: "submitted", "In Progress": "in_progress", Resolved: "resolved" };
   return {
     id: record.ticketId || record.id,
@@ -179,7 +179,7 @@ function updateStatus(req, res) {
     in_progress: "In Progress",
     resolved: "Resolved",
   };
-  const status = statusAliases[String(req.body.status || "").toLower()] || req.body.status;
+  const status = statusAliases[String(req.body.status || "").toLowerCase()] || req.body.status;
   if (!allowed.includes(status)) {
     return res.status(400).json({ success: false, error: "Status must be Pending, In Progress or Resolved" });
   }
